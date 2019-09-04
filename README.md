@@ -22,6 +22,9 @@ Hosted here: https://repl.it/repls/MicroCrazyRedundantcode
 - Growing and Shrinking String
   - When attempting to grow or shrink the reserved memory for my string, I ran into a lot of pointer errors
   - These were solved by the simplification of my pointer usage by using a buffer char array to store the string, then destroy the memory and reallocate
+
+## Output
+I test my string class with a small snippet of code that inserts and concatenates words from a file into a JDString object, then pushes that object to a vector once it has concatenated five words into one string
  
 ## Conclusion
 
