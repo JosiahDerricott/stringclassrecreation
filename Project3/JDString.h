@@ -1,11 +1,11 @@
 /*
 	Name: Josiah Derricott
-	Section: S
 	Program Name: P3 MyString v2
 
-	Description: This is the header file for the JDString class and contains
-		member function prototypes and member data for the JDString class to
-		be used in the JDString.cpp file
+	Description: This is a recreation of the built in C++ string class
+	which has some operator overloading to allow fluid use, and utility functions
+	such as length() and capacity() which return information about the memory
+	being stored.
 */
 
 #ifndef JDSTRING_H
@@ -15,12 +15,6 @@
 
 using namespace std;
 
-
-/*
-	This class creates a new data structure that manipulates
-	null terminated character arrays to be more useful with less
-	complexity and more user-readability
-*/
 class JDString
 {
 public:
@@ -40,19 +34,16 @@ public:
 		Sets the current string's data fully
 		equal to the argStr's data
 	*/
-	JDString& operator=(const JDString& argStr);
-
-	char operator[](const int &index);
+	JDString& operator = (const JDString& argStr);
 
 	/*
-		Reads from any stream into the string
+		Returns the read-only value at the given index
 	*/
-	friend istream& operator>>(istream& istrm, JDString& str);
-
+	const char operator [] (const int &index) const;
 	/*
-		Writes from the string to a stream
+		Returns the modifiable value at the given index
 	*/
-	ostream& operator<<(ostream& ostrm);
+	char& operator [] (const int &index);
 
 	/*
 		Checks the comparsion of the current string to
@@ -62,27 +53,37 @@ public:
 			returns -1 if less than
 			returns 0 if equal to
 	*/
-	int compareTo(const JDString& argStr);
+	int compareTo(const JDString& argStr) const;
 
 	/*
 		Checks if the current string is less than a given string
 	*/
-	bool operator<(const JDString& argStr);
+	bool operator < (const JDString& argStr) const;
 
 	/*
 		Checks if the current string is greater than a given string
 	*/
-	bool operator>(const JDString& argStr);
+	bool operator > (const JDString& argStr) const;
 
 	/*
 		Checks if the current string is equal to a given string
 	*/
-	bool operator==(const JDString& argStr);
+	bool operator == (const JDString& argStr) const;
 
 	/*
 		Appends a given string on to the end of the current string
 	*/
-	JDString operator+(const JDString& argStr);
+	JDString operator + (const JDString& argStr) const;
+
+	/*
+		Reads from any stream into the string
+	*/
+	friend istream& operator >> (istream& istrm, JDString &str);
+
+	/*
+		Writes from the string to a stream
+	*/
+	friend ostream& operator << (ostream& ostrm, const JDString &str);
 
 	/*
 		Returns the current length of the string
@@ -97,7 +98,7 @@ public:
 	/*
 		Returns char from the string at the given index
 	*/
-	char at(int index) const;
+	const char at(int index) const;
 
 	/*
 		Returns a null terminated char array
@@ -115,6 +116,16 @@ public:
 	void setEnd(int newEnd);
 
 	/*
+		Updates end point with capacity checking
+	*/
+	void updateEnd(int newEnd);
+
+	/*
+		Clears string contents and resets it
+	*/
+	void clear();
+
+	/*
 		Returns count of static variable currentCount
 	*/
 	static int getCurrentCount();
@@ -126,9 +137,9 @@ public:
 private:
 	static int currentCount;
 	static int createdCount;
-	int m_Cap = 20;
+	int m_Cap = 0;
 	int m_End = 0;
-	char *m_Str;
+	char *m_Str = nullptr;
 };
 
 #endif

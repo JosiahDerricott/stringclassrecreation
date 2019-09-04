@@ -19,7 +19,7 @@ int JDString::getCurrentCount()
 
 JDString::JDString()
 {
-	m_Str = new char[m_Cap];
+	setCapacity(20);
 
 	createdCount++;
 	currentCount++;
@@ -35,9 +35,8 @@ JDString::JDString(const JDString& str)
 		currentCount++;
 
 		setCapacity(str.capacity());
-		setEnd(str.length());
 
-		m_Str = new char[m_Cap];
+		setEnd(str.length());
 
 		for (int i = 0; i < str.length(); i++)
 		{
@@ -51,13 +50,21 @@ JDString::JDString(const char* str)
 	createdCount++;
 	currentCount++;
 
-	m_Str = new char[m_Cap];
+	setCapacity(20);
 
 	int i;
 
-	for (i = 0; str != '\0'; i++)
+	for (i = 0; *str != '\0'; i++)
 	{
-		m_Str[0] = *(str + i);
+		if (i >= capacity())
+		{
+			setEnd(i);
+			updateEnd(i);
+		}
+
+		m_Str[i] = *str;
+
+		str++;
 	}
 
 	setEnd(i);
@@ -70,11 +77,15 @@ JDString::~JDString()
 	delete[] m_Str;
 }
 
-JDString& JDString::operator=(const JDString& argStr)
+JDString& JDString::operator = (const JDString& argStr)
 {
 	if (this != &argStr)
 	{
-		setCapacity(argStr.capacity());
+		clear();
+
+		if (argStr.capacity() > m_Cap)
+			setCapacity(argStr.capacity());
+
 		setEnd(argStr.length());
 
 		for (int i = 0; i < argStr.length(); i++)
@@ -86,39 +97,56 @@ JDString& JDString::operator=(const JDString& argStr)
 	return *this;
 }
 
-char JDString::operator[](const int &index) // Wants this to not be const?
+const char JDString::operator [] (const int &index) const
 {
 	return m_Str[index];
 }
 
-istream& friend JDString::operator>>(istream& istrm, JDString str) // Fix this
+char& JDString::operator [] (const int &index)
 {
-	char str[100];
+	return m_Str[index];
+}
 
-	if ((istrm >> str))
+istream& operator >> (istream& istrm, JDString &str)
+{
+	char strArr[100];
+
+	str.clear();
+
+	if (istrm >> strArr)
 	{
 		for (int i = 0; i < 100; i++)
 		{
-			if (str[i] == '\0')
+			if (i > str.m_End)
+				str.setEnd(i);
+
+			if (i >= str.capacity())
 			{
-				setEnd(i);
+				str.updateEnd(i);
+			}
+
+			if (strArr[i] == '\0')
+			{
+				str.setEnd(i);
 
 				break;
 			}
 
-			m_Str[i] = str[i];
+			str[i] = strArr[i];
 		}
 	}
 
 	return istrm;
 }
 
-ostream& JDString::operator<<(ostream& ostrm)
+ostream& operator << (ostream& ostrm, const JDString &str)
 {
-	ostrm << c_str();
+	ostrm << str.c_str();
+
+	return ostrm;
 }
 
-int JDString::compareTo(const JDString& argStr)
+int JDString::compareTo(const JDString& argStr) const
 {
 	// Set the size based on smallest string
 	int size = length() < argStr.length() ? length() : argStr.length();
@@ -139,7 +167,7 @@ int JDString::compareTo(const JDString& argStr)
 	return 0;
 }
 
-bool JDString::operator>(const JDString& argStr)
+bool JDString::operator > (const JDString& argStr) const
 {
 	if (compareTo(argStr) > 0)
 		return true;
@@ -147,7 +175,7 @@ bool JDString::operator>(const JDString& argStr)
 	return false;
 }
 
-bool JDString::operator<(const JDString& argStr)
+bool JDString::operator < (const JDString& argStr) const
 {
 	if (compareTo(argStr) < 0)
 		return true;
@@ -155,7 +183,7 @@ bool JDString::operator<(const JDString& argStr)
 	return false;
 }
 
-bool JDString::operator==(const JDString& argStr)
+bool JDString::operator == (const JDString& argStr) const
 {
 	if (compareTo(argStr) == 0)
 		return true;
@@ -163,16 +191,20 @@ bool JDString::operator==(const JDString& argStr)
 	return false;
 }
 
-JDString JDString::operator+(const JDString& argStr)
+JDString JDString::operator + (const JDString& argStr) const
 {
-	int startIndex = m_End;
+	JDString temp(*this);
 
-	setEnd(m_End + argStr.length());
+	int startIndex = temp.length();
 
-	for (int i = startIndex; i < m_End; i++)
+	temp.updateEnd(temp.length() + argStr.length());
+
+	for (int i = startIndex; i < temp.length(); i++)
 	{
-		m_Str[i] = argStr.at(i - startIndex);
+		temp[i] = argStr.at(i - startIndex);
 	}
+
+	return temp;
 }
 
 int JDString::length() const
@@ -185,7 +217,7 @@ int JDString::capacity() const
 	return m_Cap;
 }
 
-char JDString::at(int index) const
+const char JDString::at(int index) const
 {
 	if (index < length())
 		return m_Str[index];
@@ -201,21 +233,49 @@ const char* JDString::c_str() const
 void JDString::setCapacity(int newCap)
 {
 	m_Cap = newCap;
+
+	m_Str = new char[m_Cap];
 }
 
 void JDString::setEnd(int newEnd)
 {
-	if (newEnd > m_Cap)
-	{
-		JDString temp(*this);
-
-		delete[] m_Str;
-
-		setCapacity(m_Cap + 20);
-
-		m_Str = new char[m_Cap];
-	}
-
-	m_Str[newEnd] = '\0';
 	m_End = newEnd;
+
+	if (m_End < capacity())
+		m_Str[m_End] = '\0';
+}
+
+void JDString::updateEnd(int newEnd)
+{
+	if (newEnd >= m_Cap)
+	{
+		char* temp = m_Str;
+		int prevLen = length() + 1;
+
+		int capAddition = m_Cap + 20;
+
+		while (capAddition < newEnd)
+			capAddition += 20;
+
+		setCapacity(capAddition);
+
+		for (int i = 0; i < prevLen; i++)
+		{
+			m_Str[i] = temp[i];
+		}
+
+		delete[] temp;
+
+		setEnd(newEnd);
+	}
+	else
+	{
+		setEnd(newEnd);
+	}
+}
+
+void JDString::clear()
+{
+	setCapacity(20);
+	setEnd(0);
 }
